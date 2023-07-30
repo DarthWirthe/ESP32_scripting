@@ -1,0 +1,136 @@
+/* Пример 12
+ * Аналоговые часы на дисплее TFT
+*/
+
+int button_pin = 15 // Кнопка
+int updateTime = 0, secTime = 0
+global int cx, cy;
+global float sx, sy;
+global int x0, yy0, x1, yy1;
+global int hh = 0, mm = 0, ss = 0
+global int osx, osy, omx, omy, ohx, ohy;
+global string s1 = "12", s2 = "3", s3 = "6", s4 = "9"
+
+global float DEG2RAD = 0.0174532925
+
+// Функция, прибавляющая 1 секунду
+function formatTime()
+{
+ if ss == 60
+ {
+  mm = mm + 1
+  ss = 0
+  if mm > 59
+  {
+   hh = hh + 1
+   mm = 0
+   if hh > 23
+   {
+    hh = 0
+   }
+  }
+ }
+}
+
+// Функция отрисовки кадра
+function draw()
+{
+ int h = tft.height(), h2 = h / 2
+ // Фон
+ for int i = 0; i < h; i = i + 1
+ {
+  tft.fill_rect(0, i, tft.width(), 1, tft.rgb(i, i, i))
+ }
+ // Циферблат
+ tft.fill_circle(cx, cy, h2, tft.rgb(32, 32, 32))
+ tft.draw_circle(cx, cy, h2, tft.rgb(255, 255, 255))
+ tft.draw_string(s1, cx - 8, cy - 44, 2)
+ tft.draw_string(s2, cx + 36, cy - 6, 2)
+ tft.draw_string(s3, cx - 3, cy + 30, 2)
+ tft.draw_string(s4, cx - 42, cy - 6, 2)
+ for int i = 0; i < 360; i = i + 30
+ {
+  float a = i - 90
+  sx = m.cos(a * DEG2RAD)
+  sy = m.sin(a * DEG2RAD)
+  x0 = sx * 57 + cx
+  yy0 = sy * 57 + cy
+  x1 = sx * 50 + cx
+  yy1 = sy * 50 + cy
+  tft.draw_line(x0, yy0, x1, yy1, tft.rgb(255, 255, 255))
+ }
+ for int i = 0; i < 360; i = i + 6
+ {
+  float a = i - 90
+  sx = m.cos(a * DEG2RAD)
+  sy = m.sin(a * DEG2RAD)
+  x0 = sx * 53 + cx
+  yy0 = sy * 53 + cy
+  tft.draw_pixel(x0, yy0, tft.rgb(255, 255, 255))
+ }
+ // Стрелки часов
+ float a
+ float sdeg = ss * 6
+ float mn = mm * 6, hn = hh * 30
+ float mdeg = sdeg * 0.01666667 + mn
+ float hdeg = mdeg * 0.0833333 + hn
+ a = hdeg - 90
+ float hx = m.cos(a * DEG2RAD)
+ float hy = m.sin(a * DEG2RAD)
+ ohx = hx * 33 + cx
+ ohy = hy * 33 + cy
+ a = mdeg - 90
+ float mx = m.cos(a * DEG2RAD)
+ float my = m.sin(a * DEG2RAD)
+ omx = mx * 44 + cx
+ omy = my * 44 + cy
+ a = sdeg - 90
+ sx = m.cos(a * DEG2RAD)
+ sy = m.sin(a * DEG2RAD)
+ osx = sx * 47 + cx
+ osy = sy * 47 + cy
+ int color1 = tft.rgb(255, 8, 32), color2 = tft.rgb(128, 128, 255)
+ int color3 = tft.rgb(128, 255, 255)
+ tft.draw_line(ohx + 1, ohy + 1, cx + 1, cy + 1, color2);
+ tft.draw_line(omx, omy, cx, cy, color3);
+ tft.draw_line(omx + 1, omy + 1, cx + 1, cy + 1, color3);
+ tft.draw_line(osx, osy, cx, cy, color1);
+ tft.draw_line(ohx, ohy, cx, cy, color2);
+ tft.fill_circle(cx, cy, 3, color1)
+}
+
+gpio.set_mode_input(button_pin)
+tft.init_buffered(1)
+tft.set_text_color(tft.rgb(255, 255, 255)) // Цвет текста белый
+
+cx = tft.width() / 2
+cy = tft.height() / 2
+// Установить случайное время
+hh = m.random(1, 23)
+mm = m.random(1, 59)
+ss = m.random(1, 59)
+
+// Основной цикл
+while true
+{
+ if (updateTime <= esp.timer())
+ {
+  updateTime = esp.timer() + 25000
+  draw()
+  tft.draw_buffer()
+  // Если кнопка нажата
+  if gpio.read(button_pin) {
+   ss = 60
+   mm = mm + 1 // Прибавить 1 минуту за такт
+   formatTime()
+  }
+ }
+ if (secTime <= esp.timer())
+ {
+  secTime = esp.timer() + 1000000
+  ss = ss + 1
+  formatTime()
+ }
+}
+
+tft.delete_buffer()

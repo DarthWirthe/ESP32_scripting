@@ -1,0 +1,175 @@
+/* Пример 13
+ *
+*/
+
+int button_pin = 15 // Кнопка
+int updateTime = 0, frameTime = 0, fctr = 0, fps = 0
+global int counter1 = 0, highscore = 0, fspeed,
+			start = false, passing = false, flag1 = true
+string s1 = "fps: ", s2 = "Press button", s3 = "to start", s4 = "High score: "
+global var white = vga.rgb(255, 255, 255),
+			blue = vga.rgb(0, 0, 255),
+			yellow = vga.rgb(255, 255, 0),
+			lightgrey = vga.rgb(200, 200, 200),
+			fcolor = vga.rgb(208, 48, 48)
+global int cw = 15
+global int bx, by1, by2, bw, bh1, bh2, fx
+global float cx, cy, movey
+
+function int min(int a, int b) {
+	if (a < b) {
+		return a
+	}
+	return b
+}
+
+// Функция инициализации
+function init()
+{
+	cx = 25
+	cy = vga.height() / 2
+	movey = 0.0
+	bx = -0xff
+	by1 = 0
+	by2 = 0
+	bw = 25 // толщина стенок
+	bh1 = 0
+	bh2 = 0
+	fx = 0 
+	fspeed = 1 // скорость игры
+}
+
+// Функция отрисовки кадра
+function draw()
+{
+	int vgah = vga.height(), vgaw = vga.width()
+	// Фон
+	vga.fill_screen(vga.rgb(0, 255, 255))
+	for int i = fx / 2 - 4; i < vgaw + 10; i = i + 8
+	{
+		vga.draw_pixel(i, 10, white)
+		vga.draw_pixel(i + 3, 16, white)
+		vga.draw_pixel(i, 22, white)
+		vga.draw_pixel(i + 3, 28, lightgrey)
+	}
+	// Летающая фигура
+	vga.fill_circle(cx, cy, cw, fcolor)
+	vga.fill_circle(cx - cw / 2, cy + cw / 2, cw / 2, fcolor)
+	vga.fill_circle(cx + cw / 2, cy - cw / 2, cw / 4, white)
+	// Стенки
+	vga.fill_rect(bx, by1, bw, bh1, yellow)
+	vga.draw_rect(bx, by1, bw, bh1, 0)
+	vga.fill_rect(bx, by2, bw, bh2, yellow)
+	vga.draw_rect(bx, by2, bw, bh2, 0)
+}
+
+function retry()
+{
+	start = false
+	if (counter1 > highscore) {
+		highscore = counter1
+	}
+}
+
+gpio.set_mode_input(button_pin)
+vga.init(1)
+vga.set_text_color(white)
+init()
+var width = vga.width(), height = vga.height()
+
+// Основной цикл
+while (true)
+{
+	if (updateTime <= esp.timer())
+	{
+		updateTime = esp.timer() + 5000
+		draw()
+		
+		if (start == false) {
+			if (flag1 == true) {
+				vga.set_cursor(12, height - 20)
+				vga.write(s3)
+				vga.set_cursor(12, height - 35)
+				vga.write(s2)
+			}
+			if (highscore > 0) {
+				vga.set_cursor(12, height - 60)
+				vga.write(s4)
+				vga.write(highscore)
+			}
+		}
+		vga.set_cursor(width - 40, 4)
+		vga.write(counter1)
+		vga.set_cursor(1, 1)
+		vga.write(s1)
+		vga.write(fps)
+		vga.draw_buffer()
+		fctr = fctr + 1
+		
+		if (gpio.read(button_pin)) {
+			if (start == false) {
+				init()
+				counter1 = 0
+				start = true
+			}
+			movey = -1.5
+		}
+		if (start) {
+			bx = bx - fspeed
+			fx = fx - 1
+			if (bx + bw < 0)
+			{
+				bx = m.random(width, width + 100)
+				int blockh = m.random(5, height - height / 4)
+				// С вероятностью 20% нижняя стенка будет короткой
+				if (m.random(1, 100) <= 20) {
+					by2 = height - blockh * 2
+				} else {
+					by2 = height - blockh
+				}
+				bh1 = height / 2 - blockh
+				bh2 = blockh
+			}
+			if (fx < 0) {
+				fx = 16
+			}
+			cy = cy + movey
+			movey = movey + 0.05
+			// Столкновение с границей экрана
+			if (cy < cw or cy > height) {
+				retry()
+			}
+			// Столкновение со стенкой
+			int tcx = cx, tcy = cy
+			if ((bx < tcx) and (bx + bw > tcx)) {
+				if (((tcy + cw > by1) and (tcy < by1 + bh1 + cw)) or ((tcy + cw > by2) and (tcy < by2 + bh2 + cw))) {
+					retry()
+				}
+				passing = true;
+			} elseif passing == true {
+				counter1 = counter1 + 1
+				passing = false
+				// Увеличение скорости каждые 35 препятствий
+				if (counter1 % 35 == 0) {
+					fspeed = fspeed + 1
+				}
+			}
+		}
+	}
+	// Счетчик fps
+	if (frameTime <= esp.timer())
+	{
+		frameTime = esp.timer() + 1000000
+		fps = fctr
+		fctr = 0
+		if (flag1) {
+			flag1 = false
+		} else {
+			flag1 = true
+		}
+		vm.collect_garbage()
+	}
+}
+
+::end::
+vga.delete_buffer()

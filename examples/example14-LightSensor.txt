@@ -1,0 +1,32 @@
+int button_pin = 15 // Кнопка
+int sensor_pin = 35 // Датчик
+int updateTime = 0
+var white = tft.rgb(255, 255, 255)
+var s1 = "Light sensor: ", s2 = " %"
+
+gpio.set_mode_input(button_pin)
+gpio.set_mode_input(sensor_pin)
+tft.init(1)
+tft.set_font(2)
+tft.set_text_color(white)
+
+while (true)
+{
+	if (updateTime <= esp.timer())
+	{
+		updateTime = esp.timer() + 1000000
+		float value = gpio.adc_read(sensor_pin)
+		int percent = value / 4095 * 100
+		tft.fill_screen(0)
+		tft.set_cursor(1, 1)
+		tft.write(s1)
+		tft.write(100 - percent)
+		tft.write(s2)
+	}
+	
+	if (gpio.read(button_pin)) {
+		goto end
+	}
+}
+
+::end::

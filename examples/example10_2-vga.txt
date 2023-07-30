@@ -1,0 +1,99 @@
+// Пример #10, но с разноцветными фигурами
+
+int button_pin = 15 // Кнопка
+int updateTime = 0, frameTime = 0, fctr = 0, fps = 0
+global int circle_size = 10, circles_count = 50 // Радиус и количество фигур
+global var gravity = 0.05 // Коэффициент гравитации
+int arr_size = circles_count * 5
+global float circles[arr_size] // Массив координат фигур
+
+for int i = 0; i < arr_size; i = i + 1
+{
+ circles[i] = 0
+}
+
+// Функция для расположения фигур по центру
+function init_pos()
+{
+ float x = vga.width() / 2
+ for int i = 0; i < circles_count; i = i + 1
+ {
+  int pos = i * 5
+  circles[pos] = x
+  circles[pos+4] = 1.0 + m.random(0, 65530)
+ }
+}
+
+// Функция симуляции физики
+function physics()
+{
+ int w = vga.width(), h = vga.height()
+ for int i = 0; i < circles_count; i = i + 1
+ {
+  int pos = i * 5
+  float x = circles[pos], y = circles[pos+1], movex = circles[pos+2], movey = circles[pos+3]
+  if x < 0 {x = 0; movex = -(movex / 1.2)}
+  if x > w - circle_size {x = w - circle_size; movex = -(movex / 1.2)}
+  if y < 0 {y = 0; movey = -(movey / 1.2)}
+  if y > h - circle_size {
+   y = h - circle_size
+   movey = -(movey / 1.2)
+  }
+  circles[pos] = x + movex
+  circles[pos+1] = y + movey
+  circles[pos+2] = movex
+  circles[pos+3] = movey + gravity
+ }
+}
+
+// Функция отрисовки кадра
+function draw()
+{
+ vga.fill_screen(vga.rgb(255, 255, 255))
+ for int i = 0; i < circles_count; i = i + 1
+ {
+  int pos = i * 5
+  float x = circles[pos], y = circles[pos + 1]
+  int color = circles[pos+4]
+  vga.fill_circle(x, y, circle_size, color)
+  vga.fill_circle(x + circle_size / 2, y - circle_size / 2, circle_size / 4, vga.rgb(255, 255, 255))
+ }
+}
+
+gpio.set_mode_input(button_pin)
+vga.init(1)
+vga.set_text_color(vga.rgb(0, 0, 0))
+init_pos()
+
+// Основной цикл
+while true
+{
+ if (updateTime <= esp.timer())
+ {
+  updateTime = esp.timer() + 12000
+  physics()
+  draw()
+  vga.set_cursor(1, 1)
+  vga.write("fps: ")
+  vga.write(fps)
+  vga.draw_buffer()
+  // Нажатие кнопки толкает фигуры вверх и в стороны
+  if (gpio.read(button_pin)) {
+   for int n = 0; n < circles_count; n = n + 1
+   {
+    int pos = n * 5
+    circles[pos+2] = circles[pos+2] + 0.2 * (10 - m.random(1, 20))
+    circles[pos+3] = circles[pos+3] - 0.1 * m.random(1, 5)
+   }
+  }
+  fctr = fctr + 1
+ }
+ // Счетчик fps
+ if (frameTime <= esp.timer())
+ {
+  frameTime = esp.timer() + 1000000
+  fps = fctr
+  fctr = 0
+  vm.collect_garbage()
+ }
+}

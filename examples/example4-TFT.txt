@@ -1,0 +1,6 @@
+tft.init(1)
+tft.fill_screen(0)
+tft.write("These forms are processed at run-time to produce dynamically-generated 
+user interfaces. In order to generate a form at run-time, a resource 
+file containing a .ui file is needed. Applications that use the form 
+hadling classes need to be configured to be built against the QtUiTools module.")

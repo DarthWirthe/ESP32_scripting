@@ -1,0 +1,14 @@
+function delay(int mcs) {
+ int t1 = esp.timer(), t2 = t1 + mcs
+ while esp.timer() <= t2 {}
+}
+
+tft.init(1)
+for int i = 10; i <= 20; i = i + 1 
+{
+ tft.fill_screen(0)
+ tft.set_cursor(0,20)
+ tft.set_font(i)
+ tft.write("Hello, World!")
+ delay(5000000)
+}

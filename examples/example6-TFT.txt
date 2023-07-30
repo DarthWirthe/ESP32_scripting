@@ -1,0 +1,35 @@
+﻿
+function Sort(int_array a) {
+ int i = 1, key, j, len = array.length(a)
+ while i < len {
+  key = a[i]
+  j = i - 1
+  while a[j] > key and j >= 0 {
+   a[j + 1] = a[j]
+   j = j - 1
+  }
+  a[j + 1] = key
+  i = i + 1
+ }
+}
+
+function PrintArray(int_array a) {
+ int i = 0, len = array.length(a)
+ while i < len {
+  tft.write(a[i])
+  tft.write(" ")
+  i = i + 1
+ }
+}
+
+tft.init(1)
+tft.set_font(2)
+tft.set_text_color(tft.rgb(255, 255, 255))
+tft.fill_screen(tft.rgb(0, 0, 255))
+
+int myArray[]{15, 10, 6, 31, 2, 74, 40, 16, 9, 22}
+tft.write("Array:\n")
+PrintArray(myArray)
+tft.write(";\nAfter sort:\n")
+Sort(myArray)
+PrintArray(myArray)

@@ -1,0 +1,44 @@
+int button_pin = 15 // Кнопка
+int sensor_pin = 35 // Датчик
+int updateTime = 0
+var white = tft.rgb(255, 255, 255)
+string s1 = "Temperature:\n", s2 = " *C"
+
+float R1 = 10000.0   // voltage divider resistor value
+float Beta = 3950.0  // Beta value
+float To = 298.15    // Temperature in Kelvin for 25 degree Celsius
+float Ro = 10000.0   // Resistance of Thermistor at 25 degree Celsius
+float adcMax = 4095.0, Vs = 3.245
+
+gpio.set_mode_input(button_pin)
+gpio.set_mode_input(sensor_pin)
+tft.init(1)
+tft.set_font(2)
+tft.set_text_color(white)
+
+float Vout, Rt
+float T, Tc
+
+while (true)
+{
+	if (updateTime <= esp.timer())
+	{
+		updateTime = esp.timer() + 1000000
+		float mv = gpio.adc_read_millivolts(sensor_pin)
+		Vout = mv / 1000.0
+		Rt = R1 * Vout / (Vs - Vout)
+		T = 1.0 / (1.0 / To + m.log(Rt / Ro) / Beta) // Temperature in Kelvin
+		Tc = T - 273.15
+		tft.fill_screen(0)
+		tft.set_cursor(1, 1)
+		tft.write(s1)
+		tft.write(Tc)
+		tft.write(s2)
+	}
+	
+	if (gpio.read(button_pin)) {
+		goto end
+	}
+}
+
+::end::

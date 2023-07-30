@@ -1,0 +1,13 @@
+function int test() {
+ return m.pow(2, 6) * 3 - 2 * (2 + 1)
+}
+
+tft.init(1)
+int i = 0
+while i < tft.width() {
+ tft.fill_rect(0, 0, tft.width() - i, tft.width() - i, tft.rgb(255 - i, i / 2 + i, i))
+ i = i + 1
+}
+tft.set_text_color(tft.rgb(255, 255, 255))
+tft.set_cursor(5, 10)
+tft.print(test())

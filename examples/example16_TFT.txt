@@ -1,0 +1,129 @@
+// Пример #16
+
+int button_pin = 15 // Кнопка
+int updateTime = 0, frameTime = 0, fctr = 0, fps = 0
+global int tris_count = 10 // количество треугольников
+global int verts_count = tris_count + 2
+int vertex_size = verts_count * 4
+global float vertices[vertex_size] // Массив координат точек
+int tris_size = tris_count * 4
+global int triangles[tris_size] // Массив треугольников
+
+for int i = 0; i < vertex_size; i = i + 1
+{
+	vertices[i] = 0.0
+}
+
+function int min(int a, int b) {
+	if (a < b) {
+		return a
+	}
+	return b
+}
+
+// Функция для расположения фигур
+function init_pos()
+{
+	float x = tft.width() / 2
+	
+	for int i = 0; i < verts_count; i = i + 1
+	{
+		int pos = i * 4
+		vertices[pos] = 1.0 + m.random(10, 150)
+		vertices[pos+1] = 1.0 + m.random(10, 100)
+		vertices[pos+2] = 1.0 / m.random(2, 10)
+		vertices[pos+3] = 1.0 / m.random(2, 10)
+	}
+	for int i = 0; i < tris_count; i = i + 1
+	{
+		int pos = i * 4
+		triangles[pos] = i * 4
+		triangles[pos+1] = m.random(64, 255)
+		triangles[pos+2] = m.random(16, 64)
+		triangles[pos+3] = m.random(64, 255)
+	}
+}
+
+// Функция симуляции
+function simulation()
+{
+	int w = tft.width(), h = tft.height()
+	for int i = 0; i < verts_count; i = i + 1
+	{
+		int pos = i * 4
+		float x = vertices[pos], y = vertices[pos+1], movex = vertices[pos+2], movey = vertices[pos+3]
+		if (x < 0) {x = 0; movex = -movex}
+		if (x > w) {x = w; movex = -movex}
+		if (y < 0) {y = 0; movey = -movey}
+		if (y > h) {y = h; movey = -movey}
+		vertices[pos] = x + movex
+		vertices[pos+1] = y + movey
+		vertices[pos+2] = movex
+		vertices[pos+3] = movey
+	}
+	for int i = 0; i < tris_count; i = i + 1
+	{
+		int pos = i * 4
+		if (m.random(1, 100) <= 2) {
+			int val1 = 2 - m.random(1, 3),
+				val2 = 2 - m.random(1, 3),
+				val3 = 2 - m.random(1, 3)
+			if (m.random(1, 100) <= 5) { val1 = val1 * 2 }
+			//if (m.random(1, 100) <= 5) { val2 = val2 * 2 }
+			if (m.random(1, 100) <= 5) { val3 = val3 * 2 }
+			int c1 = triangles[pos+1], c2 = triangles[pos+2], c3 = triangles[pos+3]
+			triangles[pos+1] = min(c1 + val1, 255)
+			triangles[pos+2] = min(c2 + val2, 255)
+			triangles[pos+3] = min(c3 + val3, 255)
+		}
+	}
+}
+
+// Функция отрисовки кадра
+function draw()
+{
+	tft.fill_screen(tft.rgb(0, 0, 0))
+	for int i = 0; i < tris_count; i = i + 1
+	{
+		int pos = i * 4
+		int v = triangles[pos], c1 = triangles[pos + 1], c2 = triangles[pos + 2], c3 = triangles[pos + 3]
+		int x1 = vertices[v], y1 = vertices[v+1],
+			x2 = vertices[v+4], y2 = vertices[v+5],
+			x3 = vertices[v+8], y3 = vertices[v+9]
+		int color = tft.rgb(c1, c2, c3)
+		tft.fill_triangle(x1, y1, x2, y2, x3, y3, color)
+	}
+}
+
+gpio.set_mode_input(button_pin)
+tft.init_buffered(1)
+tft.set_font(1)
+init_pos()
+
+// Основной цикл
+while true
+{
+	if (updateTime <= esp.timer())
+	{
+		updateTime = esp.timer() + 12000
+		simulation()
+		draw()
+		tft.set_cursor(1, 1)
+		tft.write("fps: ")
+		tft.write(fps)
+		tft.draw_buffer()
+
+		if (gpio.read(button_pin)) {
+			init_pos()
+		}
+	fctr = fctr + 1
+	}
+	// Счетчик fps
+	if (frameTime <= esp.timer())
+	{
+		frameTime = esp.timer() + 1000000
+		fps = fctr
+		fctr = 0
+		vm.collect_garbage()
+	}
+}

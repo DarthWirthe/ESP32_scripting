@@ -1,0 +1,48 @@
+﻿/* Двойная  буферизация дисплея
+ * При нажатии кнопки выполнение программы завершается
+*/
+
+int updateTime = 0, frameTime = 0, fctr = 0, fps = 0, c = 0, circles = 0
+int button_pin = 15
+gpio.set_mode_input(button_pin)
+
+string s1 = "FPS: ", s2 = " timer = ", s3 = "\ncircles per sec.: "
+
+tft.init_buffered(1)
+tft.set_font(1)
+tft.fill_screen(0)
+while true
+{
+ tft.fill_circle(m.random(0, 160), m.random(0, 128), m.random(5, 20), m.random(0, 65535))
+ c = c + 1
+ if (updateTime <= esp.timer())
+ {
+  updateTime = esp.timer() + 25000
+  tft.set_cursor(1, 1)
+  tft.write(s1)
+  tft.write(fps)
+  tft.write(s2)
+  tft.write(esp.timer())
+  tft.write(s3)
+  tft.write(circles)
+  tft.draw_buffer()
+  fctr = fctr + 1
+ }
+
+ if (frameTime <= esp.timer())
+ {
+  frameTime = esp.timer() + 1000000
+  fps = fctr
+  fctr = 0
+  circles = c
+  c = 0
+ }
+
+ if (gpio.read(button_pin)) {
+  goto end_loop
+ }
+}
+
+::end_loop::
+tft.delete_buffer()
+

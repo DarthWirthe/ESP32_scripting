@@ -1,0 +1,28 @@
+int led_pin = 4 // Номер вывода для светодиода
+int pwm_chan = 0; // Канал ШИМ
+int d = 10000 // Длина задержки (10 миллисекунд)
+gpio.pwm_setup(pwm_chan, 8)
+gpio.pwm_attach_pin(led_pin, pwm_chan)
+
+// Функция задержки, mcs - длина в микросекундах
+function delay(int mcs) {
+ int t1 = esp.timer(), t2 = t1 + mcs
+ while esp.timer() <= t2 {}
+}
+
+// Светодиод медленно включается/выключается 10 раз
+int n = 0
+while n < 10 {
+ int i = 0
+ while i <= 255 {
+  gpio.pwm_write(pwm_chan, i)
+  delay(d)
+  i = i + 1
+ }
+ while i >= 0 {
+  gpio.pwm_write(pwm_chan, i)
+  delay(d)
+  i = i - 1
+ }
+ n = n + 1
+}

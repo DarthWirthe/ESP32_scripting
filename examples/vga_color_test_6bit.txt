@@ -1,0 +1,51 @@
+/* 
+ * При нажатии кнопки выполнение программы завершается
+*/
+
+int updateTime = 0, frameTime = 0, fctr = 0, fps = 0, c = 0, circles = 0
+int button_pin = 15
+gpio.set_mode_input(button_pin)
+
+vga.init(1)
+vga.fill_screen(0)
+while true
+{
+ c = c + 1
+ if (updateTime <= esp.timer())
+ {
+  updateTime = esp.timer() + 100000
+  vga.fill_rect(10, 10, 20, 20, vga.rgb(255, 0, 0))
+  vga.fill_rect(40, 10, 20, 20, vga.rgb(0, 255, 0))
+  vga.fill_rect(70, 10, 20, 20, vga.rgb(0, 0, 255))
+  vga.fill_rect(100, 10, 20, 20, vga.rgb(255, 255, 0))
+  vga.fill_rect(130, 10, 20, 20, vga.rgb(0, 255, 255))
+  vga.fill_rect(160, 10, 20, 20, vga.rgb(255, 0, 255))
+  vga.fill_rect(190, 10, 20, 20, vga.rgb(255, 255, 255))
+  vga.fill_rect(10, 40, 20, 20, vga.rgb(128, 0, 0))
+  vga.fill_rect(40, 40, 20, 20, vga.rgb(0, 128, 0))
+  vga.fill_rect(70, 40, 20, 20, vga.rgb(0, 0, 128))
+  vga.fill_rect(100, 40, 20, 20, vga.rgb(128, 128, 0))
+  vga.fill_rect(130, 40, 20, 20, vga.rgb(0, 128, 128))
+  vga.fill_rect(160, 40, 20, 20, vga.rgb(128, 0, 128))
+  vga.fill_rect(190, 40, 20, 20, vga.rgb(128, 128, 128))
+  vga.draw_buffer()
+  fctr = fctr + 1
+ }
+
+ if (frameTime <= esp.timer())
+ {
+  frameTime = esp.timer() + 1000000
+  fps = fctr
+  fctr = 0
+  circles = c
+  c = 0
+ }
+
+ if (gpio.read(button_pin)) {
+  goto end_loop
+ }
+}
+
+::end_loop::
+vga.delete_buffer()
+

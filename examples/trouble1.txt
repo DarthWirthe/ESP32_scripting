@@ -1,0 +1,40 @@
+
+int updateTime = 0, frameTime = 0, fctr = 0, fps = 0
+
+tft.init_buffered(1)
+
+while true
+{
+ if (updateTime <= esp.timer())
+ {
+  updateTime = esp.timer() + 7500
+  var free = vm.get_free_memory_size()
+  var total = vm.get_total_memory_size()
+  var blocks = vm.get_heap_blocks_count()
+  var heapsize = vm.get_heap_size()
+  tft.fill_screen(0)
+  tft.set_cursor(0, 40)
+  tft.write("Memory: ")
+  tft.write(free)
+  tft.write(" / ")
+  tft.write(total)
+  tft.write(" bytes\nheap blocks: ")
+  tft.write(blocks)
+  tft.write("\nheap size: ")
+  tft.write(heapsize)
+  tft.write(" bytes\nstack size: ")
+  tft.write(total - heapsize)
+  tft.write(" bytes\nfps: ")
+  tft.write(fps)
+  tft.draw_buffer()
+  fctr = fctr + 1
+ }
+ 
+ if (frameTime <= esp.timer())
+ {
+  frameTime = esp.timer() + 1000000
+  fps = fctr
+  fctr = 0
+ }
+ 
+}

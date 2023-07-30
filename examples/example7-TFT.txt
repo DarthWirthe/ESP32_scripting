@@ -1,0 +1,9 @@
+string s = "Hello, World!!!"
+tft.init(1)
+tft.fill_screen(0)
+int i = 0
+do {
+ i = i + 1
+ tft.write(string.substr(s, 0, i))
+ tft.write("\n")
+} while i < string.length(s) - 1

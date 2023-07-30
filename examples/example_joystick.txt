@@ -1,0 +1,48 @@
+global int pin_x = 34, pin_y = 35
+int button1 = 15
+gpio.set_mode_input(pin_x)
+gpio.set_mode_input(pin_y)
+gpio.set_mode_input(button1)
+
+global int xcl = 0, ycl = 0 // Для калибровки
+global int bx = 20, by = 20 // Координаты круга
+
+function int constrain(int amt, int low, int high)
+{
+ if amt < low { return low }
+ if amt > high { return high }
+ return amt
+}
+
+function draw()
+{
+ int mx = gpio.adc_read(pin_x) - xcl
+ int my = gpio.adc_read(pin_y) - ycl
+ tft.fill_circle(bx, by, 10, 0)
+ bx = constrain(bx + mx / 1000, 0, tft.width())
+ by = constrain(by + my / 1000, 0, tft.height())
+ tft.fill_circle(bx, by, 10, 65535)
+}
+
+int updateTime = 0
+
+tft.init(1)
+tft.fill_screen(0)
+xcl = gpio.adc_read(pin_x)
+ycl = gpio.adc_read(pin_y)
+
+int w = tft.width(), h = tft.height()
+
+while true
+{
+ if (updateTime <= esp.timer())
+ {
+  updateTime = esp.timer() + 75
+  draw()
+ }
+ if (gpio.read(button1)) {
+  goto exit
+ }
+}
+
+::exit::

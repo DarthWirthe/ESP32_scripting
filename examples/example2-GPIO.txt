@@ -1,0 +1,19 @@
+int led_pin = 4 // Номер вывода для светодиода
+int d = 500000 // Длина задержки (500 миллисекунд)
+gpio.set_mode_output(led_pin)
+
+// Функция задержки, mcs - длина в микросекундах
+function delay(int mcs) {
+ int t1 = esp.timer(), t2 = t1 + mcs
+ while esp.timer() <= t2 {}
+}
+
+// Светодиод включается/выключается на полсекунды 10 раз
+int i = 0
+while i < 10 {
+ gpio.write(led_pin, 1)
+ delay(d)
+ gpio.write(led_pin, 0)
+ delay(d)
+ i = i + 1
+}

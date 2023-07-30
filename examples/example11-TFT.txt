@@ -1,0 +1,69 @@
+
+int button_pin = 15 // Кнопка
+int updateTime = 0, frameTime = 0, fctr = 0, fps = 0
+string s1 = "fps: "
+global int cx, cy, angle = 0, circle_size = 8
+global float c1[2]
+
+global float DEG2RAD = 0.0174532925
+
+/* Функция для определения координат по радиусу r и углу a
+ * относительно точки [x, y]
+*/
+function float_array getCoord(int x, int y, int r, float a)
+{
+  float sx1 = m.cos( -a * DEG2RAD );
+  float sy1 = m.sin( -a * DEG2RAD );
+  float c[2]{sx1 * r + x, sy1 * r + y}
+  return c
+}
+
+// Функция отрисовки кадра
+function draw()
+{
+ int x1 = c1[0]
+ int y1 = c1[1]
+ tft.fill_screen(tft.rgb(0, 0, 0))
+ tft.fill_circle(cx, cy, 12, tft.rgb(255, 255, 128))
+ tft.fill_circle(x1, y1, circle_size, tft.rgb(64, 128, 255))
+ var c2 = getCoord(x1, y1, circle_size + 8, -angle * 6)
+ int x2 = c2[0]
+ int y2 = c2[1]
+ tft.fill_circle(x2, y2, circle_size / 4, tft.rgb(255, 255, 255))
+}
+
+gpio.set_mode_input(button_pin)
+tft.init_buffered(1)
+tft.set_font(1)
+cx = tft.width() / 2
+cy = tft.height() / 2
+
+// Основной цикл
+while true
+{
+ if (updateTime <= esp.timer())
+ {
+  updateTime = esp.timer() + 12000
+  draw()
+  tft.set_cursor(1, 1)
+  tft.write(s1)
+  tft.write(fps)
+  tft.draw_buffer()
+  angle = angle + 2
+  c1 = getCoord(cx, cy, 50, angle)
+  fctr = fctr + 1
+  if (gpio.read(button_pin)) {
+   goto program_end
+  }
+ }
+ // Счетчик fps
+ if (frameTime <= esp.timer())
+ {
+  frameTime = esp.timer() + 1000000
+  fps = fctr
+  fctr = 0
+ }
+}
+
+::program_end::
+tft.delete_buffer()

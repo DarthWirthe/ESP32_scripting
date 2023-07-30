@@ -1,0 +1,23 @@
+int button1 = 15
+
+tft.init(1)
+tft.set_font(2)
+tft.fill_screen(tft.rgb(0, 0, 255))
+gpio.set_mode_input(button1)
+
+int background = 0
+int counter = 1
+
+while true {
+ if (gpio.read(button1)) {
+  while (gpio.read(button1) > 0) {}
+  background = tft.rgb(m.random(100, 200), m.random(0, 255), m.random(0, 255))
+  tft.fill_screen(background)
+  tft.set_text_color(65536 - background)
+  tft.set_cursor(0, 10)
+  tft.write("Button pressed\n")
+  tft.write(counter)
+  tft.write(" times")
+  counter = counter + 1
+ }
+}

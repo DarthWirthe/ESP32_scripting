@@ -1,0 +1,30 @@
+function delay(int mcs) {
+ int t1 = esp.timer(), t2 = t1 + mcs
+ while esp.timer() <= t2 {}
+}
+
+function draw() {
+ for int y = 0; y < vga.height() - 9; y = y + 1
+ {
+  for int x = 1; x < vga.width() - 1; x = x + 1
+  {
+   int c0 = x
+   int c1 = y + esp.timer()
+   int c2 = x + y - c1
+   int c3 = y * c2
+   int r = (c0 & 0x1f) + (c1 & 0x1f) + ((c2 & 0x1f) + (c3 & 0x1f) / 2) / 3
+   int g = ((c0 & 0x3e0) + (c1 & 0x3e0) + ((c2 & 0x3e0) + (c3 & 0x3e0) / 2) / 3) & 0x3e0
+   int b = ((c0 & 0x3c00) + (c1 & 0x3c00) + ((c2 & 0x3c00) + (c3 & 0x3c00) / 2) / 3) & 0x3c00
+   vga.draw_pixel(x, y, r | g | b)
+  }
+ }
+}
+
+vga.init(0)
+for int i = 0; i <= 100; i = i + 1
+{
+ draw()
+ delay(500000)
+}
+
+vga.delete_buffer()
